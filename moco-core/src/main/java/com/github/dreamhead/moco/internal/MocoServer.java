@@ -1,10 +1,7 @@
 package com.github.dreamhead.moco.internal;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandler;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
@@ -39,12 +36,13 @@ public class MocoServer {
 
     private void doStop() {
         if (future != null) {
-            future.channel().closeFuture();
+            future.channel().close().syncUninterruptibly();
+            future = null;
         }
 
         if (bossGroup != null) {
             bossGroup.shutdownGracefully();
-            workerGroup = null;
+            bossGroup = null;
         }
 
 

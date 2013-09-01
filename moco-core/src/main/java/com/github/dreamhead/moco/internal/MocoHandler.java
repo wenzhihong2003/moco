@@ -1,8 +1,7 @@
 package com.github.dreamhead.moco.internal;
 
-import com.github.dreamhead.moco.RequestMatcher;
-import com.github.dreamhead.moco.ResponseHandler;
 import com.github.dreamhead.moco.setting.BaseSetting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.EventBus;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -10,19 +9,15 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 
-import java.util.List;
-
 public class MocoHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
     private final EventBus eventBus = new EventBus();
 
-    private final List<BaseSetting> settings;
-    private final RequestMatcher anyRequestMatcher;
-    private final ResponseHandler anyResponseHandler;
+    private final ImmutableList<BaseSetting> settings;
+    private final BaseSetting anySetting;
 
     public MocoHandler(ActualHttpServer server) {
         this.settings = server.getSettings();
-        this.anyRequestMatcher = server.getAnyRequestMatcher();
-        this.anyResponseHandler = server.getAnyResponseHandler();
+        this.anySetting = server.getAnySetting();
         this.eventBus.register(new MocoEventListener());
     }
 
@@ -61,11 +56,9 @@ public class MocoHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
             }
         }
 
-        if (anyResponseHandler != null) {
-            if (anyRequestMatcher.match(request)) {
-                anyResponseHandler.writeToResponse(request, response);
-                return response;
-            }
+        if (anySetting.match(request)) {
+            anySetting.writeToResponse(request, response);
+            return response;
         }
 
         return defaultResponse(request, HttpResponseStatus.BAD_REQUEST);
